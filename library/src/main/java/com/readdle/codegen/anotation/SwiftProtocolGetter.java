@@ -6,7 +6,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD) @Retention(RetentionPolicy.CLASS)
-public @interface SwiftCallbackFunc {
-
-    String value() default "";
+public @interface SwiftProtocolGetter {
+	String value() default "";
 }

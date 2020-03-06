@@ -44,7 +44,15 @@ class SwiftSetterDescriptor implements JavaSwiftProcessor.WritableElement {
         }
     }
 
-    @Override
+	public String getSwiftName() {
+		return swiftName;
+	}
+
+	public boolean isStatic() {
+		return isStatic;
+	}
+
+	@Override
     public void generateCode(SwiftWriter swiftWriter, String javaFullName, String swiftType) throws IOException {
         String swiftFuncName = Utils.mangleFunctionName(javaFullName, javaName, Collections.singletonList(param));
 

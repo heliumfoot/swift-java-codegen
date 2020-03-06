@@ -1,6 +1,8 @@
 package com.readdle.codegen;
 
 import com.readdle.codegen.anotation.SwiftCallbackFunc;
+import com.readdle.codegen.anotation.SwiftGetter;
+import com.readdle.codegen.anotation.SwiftSetter;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -14,6 +16,7 @@ import javax.lang.model.element.VariableElement;
 
 public class SwiftCallbackFuncDescriptor {
 
+	private ExecutableElement executableElement;
     private String javaMethodName;
     private String swiftMethodName;
 
@@ -30,6 +33,7 @@ public class SwiftCallbackFuncDescriptor {
 
     SwiftCallbackFuncDescriptor(ExecutableElement executableElement, JavaSwiftProcessor processor) {
         String elementName = executableElement.getSimpleName().toString();
+        this.executableElement = executableElement;
         this.javaMethodName = elementName;
         this.swiftMethodName = elementName;
 
@@ -65,7 +69,7 @@ public class SwiftCallbackFuncDescriptor {
             int paramStart = funcFullName.indexOf("(");
             int paramEnd = funcFullName.indexOf(")");
 
-            if (paramStart <= 0 || paramEnd <= 0 || paramEnd <= paramStart) {
+            if ((paramStart <= 0 || paramEnd <= 0 || paramEnd <= paramStart)) {
                 throw new SwiftMappingException("Wrong func name", executableElement);
             }
 
@@ -86,7 +90,31 @@ public class SwiftCallbackFuncDescriptor {
         }
     }
 
-    void generateCode(SwiftWriter swiftWriter, String javaFullName, String swiftType) throws IOException {
+	public ExecutableElement getExecutableElement() {
+		return executableElement;
+	}
+
+	public boolean isReturnTypeOptional() {
+		return isReturnTypeOptional;
+	}
+
+	public SwiftEnvironment.Type getReturnSwiftType() {
+		return returnSwiftType;
+	}
+
+	public boolean isStatic() {
+		return isStatic;
+	}
+
+	public String getSwiftMethodName() {
+		return swiftMethodName;
+	}
+
+	public List<SwiftParamDescriptor> getParams() {
+		return params;
+	}
+
+	void generateCode(SwiftWriter swiftWriter, String javaFullName, String swiftType) throws IOException {
         swiftWriter.emitEmptyLine();
         swiftWriter.emitStatement(String.format("static let javaMethod%1$s = try! JNI.%4$s(forClass: \"%2$s\", method: \"%1$s\", sig: \"%3$s\")",
                 javaMethodName,

@@ -2,12 +2,16 @@ package com.readdle.codegen;
 
 import com.readdle.codegen.anotation.SwiftCallbackFunc;
 import com.readdle.codegen.anotation.SwiftDelegate;
+import com.readdle.codegen.anotation.SwiftGetter;
+import com.readdle.codegen.anotation.SwiftSetter;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
@@ -23,7 +27,6 @@ import javax.tools.StandardLocation;
 import static com.readdle.codegen.JavaSwiftProcessor.FOLDER;
 
 class SwiftDelegateDescriptor {
-
     private static final String SUFFIX = "Android.swift";
     private String swiftFilePath;
 
@@ -35,9 +38,38 @@ class SwiftDelegateDescriptor {
 
     List<SwiftFuncDescriptor> functions = new LinkedList<>();
     private List<SwiftCallbackFuncDescriptor> callbackFunctions = new LinkedList<>();
-    private String[] protocols;
+    private Map<String, SwiftProperty> properties = new HashMap<>();
+
+	private String[] protocols;
 
     private boolean isInterface;
+
+    class SwiftProperty {
+    	SwiftGetterDescriptor getterDescriptor;
+    	SwiftSetterDescriptor setterDescriptor;
+    	SwiftCallbackFuncDescriptor getterCallbackFuncDescriptor;
+    	SwiftCallbackFuncDescriptor setterCallbackFuncDescriptor;
+
+    	SwiftProperty(SwiftGetterDescriptor getterDescriptor, SwiftCallbackFuncDescriptor getterCallbackFuncDescriptor) {
+    		this.getterDescriptor = getterDescriptor;
+    		this.getterCallbackFuncDescriptor = getterCallbackFuncDescriptor;
+		}
+
+		SwiftProperty(SwiftSetterDescriptor setterDescriptor, SwiftCallbackFuncDescriptor setterCallbackFuncDescriptor) {
+    		this.setterDescriptor = setterDescriptor;
+    		this.setterCallbackFuncDescriptor = setterCallbackFuncDescriptor;
+		}
+
+		void setSetter(SwiftSetterDescriptor setterDescriptor, SwiftCallbackFuncDescriptor callbackFuncDescriptor) {
+    		this.setterDescriptor = setterDescriptor;
+    		this.setterCallbackFuncDescriptor = callbackFuncDescriptor;
+		}
+
+		void setGetter(SwiftGetterDescriptor getterDescriptor, SwiftCallbackFuncDescriptor callbackFuncDescriptor) {
+			this.getterDescriptor = getterDescriptor;
+			this.getterCallbackFuncDescriptor = callbackFuncDescriptor;
+		}
+	}
 
     SwiftDelegateDescriptor(TypeElement classElement, Filer filer, JavaSwiftProcessor processor) throws IllegalArgumentException {
         this.annotatedClassElement = classElement;
@@ -138,7 +170,7 @@ class SwiftDelegateDescriptor {
 
         for (Element element : classElement.getEnclosedElements()) {
             if (element.getKind() == ElementKind.METHOD) {
-                ExecutableElement executableElement = (ExecutableElement) element;
+				ExecutableElement executableElement = (ExecutableElement) element;
                 // Except init. We generate it's manually
                 if (executableElement.getModifiers().contains(Modifier.NATIVE) && !executableElement.getSimpleName().contentEquals("init")) {
                     functions.add(new SwiftFuncDescriptor(executableElement, processor));
@@ -156,6 +188,36 @@ class SwiftDelegateDescriptor {
                 callbackFunctions.add(new SwiftCallbackFuncDescriptor(executableElement, processor));
             }
         }
+
+        for (SwiftCallbackFuncDescriptor callbackFuncDescriptor : callbackFunctions) {
+        	ExecutableElement executableElement = callbackFuncDescriptor.getExecutableElement();
+        	SwiftGetter getterAnnotation = executableElement.getAnnotation(SwiftGetter.class);
+			SwiftSetter setterAnnotation = executableElement.getAnnotation(SwiftSetter.class);
+
+        	if (getterAnnotation != null) {
+        		SwiftGetterDescriptor descriptor = new SwiftGetterDescriptor(executableElement, getterAnnotation, processor);
+        		String swiftName = descriptor.getSwiftName();
+
+        		if (properties.containsKey(swiftName)) {
+					SwiftProperty swiftProperty = properties.get(swiftName);
+					swiftProperty.setGetter(descriptor, callbackFuncDescriptor);
+				} else {
+        			SwiftProperty swiftProperty = new SwiftProperty(descriptor, callbackFuncDescriptor);
+        			properties.put(swiftName, swiftProperty);
+				}
+			} else if(setterAnnotation != null) {
+				SwiftSetterDescriptor descriptor = new SwiftSetterDescriptor(executableElement, setterAnnotation, processor);
+				String swiftName = descriptor.getSwiftName();
+
+				if (properties.containsKey(swiftName)) {
+					SwiftProperty swiftProperty = properties.get(swiftName);
+					swiftProperty.setSetter(descriptor, callbackFuncDescriptor);
+				} else {
+					SwiftProperty swiftProperty = new SwiftProperty(descriptor, callbackFuncDescriptor);
+					properties.put(swiftName, swiftProperty);
+				}
+			}
+		}
     }
 
     File generateCode() throws IOException {
@@ -191,6 +253,18 @@ class SwiftDelegateDescriptor {
 
         swiftWriter.emitEmptyLine();
         swiftWriter.emitStatement("let jniObject: jobject");
+
+        // Write setters/getters
+
+		// var wahtever {
+		//     get { }
+		// 	   set { }
+		// }
+        if (isInterface) {
+			for (Map.Entry<String, SwiftProperty> entry : properties.entrySet()) {
+
+			}
+		}
 
         swiftWriter.emitEmptyLine();
         swiftWriter.emitStatement("public init(jniObject: jobject) {");
