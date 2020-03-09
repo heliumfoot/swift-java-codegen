@@ -35,13 +35,11 @@ public class SwiftPropertyDescriptor implements JavaSwiftProcessor.WritableEleme
 	@Override
 	public void generateCode(SwiftWriter swiftWriter, String javaFullName, String swiftType) throws IOException {
 		swiftWriter.emitEmptyLine();
-
-		swiftWriter.emitEmptyLine();
-		swiftWriter.emitStatement(String.format("var %s: %s%s {", swiftName, returnType.swiftType, isReturnTypeOptional ? "?" : ""));
+		swiftWriter.emitStatement(String.format("public var %s: %s%s {", swiftName, returnType.swiftType, isReturnTypeOptional ? "?" : ""));
 
 		if (this.hasGetter) {
 			swiftWriter.emitStatement("get {");
-			swiftWriter.emitStatement(String.format("return %s", property.getterCallbackFuncDescriptor.getSwiftMethodName()));
+			swiftWriter.emitStatement(String.format("return %s()", property.getterCallbackFuncDescriptor.getSwiftMethodName()));
 			swiftWriter.emitStatement("}");
 		}
 
@@ -50,14 +48,16 @@ public class SwiftPropertyDescriptor implements JavaSwiftProcessor.WritableEleme
 			SwiftParamDescriptor paramDescriptor = funcDescriptor.getParams().get(0);
 			String param = "newValue";
 
-			if (!paramDescriptor.name.isEmpty()) {
-				param = String.format("%s: newValue", paramDescriptor.name);
-			}
+//			if (!paramDescriptor.name.isEmpty()) {
+//				param = String.format("%s: newValue", paramDescriptor.name);
+//			}
 
 			swiftWriter.emitStatement("set {");
 			swiftWriter.emitStatement(String.format("%s(%s);", property.setterCallbackFuncDescriptor.getSwiftMethodName(), param));
 			swiftWriter.emitStatement("}");
 		}
+
+		swiftWriter.emitStatement("}");
 	}
 
 	@Override

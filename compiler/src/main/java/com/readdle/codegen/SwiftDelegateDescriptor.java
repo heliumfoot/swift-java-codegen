@@ -38,7 +38,7 @@ class SwiftDelegateDescriptor {
 
     List<SwiftFuncDescriptor> functions = new LinkedList<>();
     private List<SwiftCallbackFuncDescriptor> callbackFunctions = new LinkedList<>();
-    private Map<String, SwiftProperty> properties = new HashMap<>();
+    private List<SwiftPropertyDescriptor> swiftPropertyDescriptors = new ArrayList<>();
 
 	private String[] protocols;
 
@@ -189,6 +189,8 @@ class SwiftDelegateDescriptor {
             }
         }
 
+        Map<String, SwiftProperty> properties = new HashMap<>();
+
         for (SwiftCallbackFuncDescriptor callbackFuncDescriptor : callbackFunctions) {
         	ExecutableElement executableElement = callbackFuncDescriptor.getExecutableElement();
         	SwiftGetter getterAnnotation = executableElement.getAnnotation(SwiftGetter.class);
@@ -217,6 +219,11 @@ class SwiftDelegateDescriptor {
 					properties.put(swiftName, swiftProperty);
 				}
 			}
+		}
+
+		for (Map.Entry<String, SwiftProperty> entry : properties.entrySet()) {
+			SwiftPropertyDescriptor propertyDescriptor = new SwiftPropertyDescriptor(entry.getValue(), processor);
+			swiftPropertyDescriptors.add(propertyDescriptor);
 		}
     }
 
@@ -254,15 +261,11 @@ class SwiftDelegateDescriptor {
         swiftWriter.emitEmptyLine();
         swiftWriter.emitStatement("let jniObject: jobject");
 
-        // Write setters/getters
 
-		// var wahtever {
-		//     get { }
-		// 	   set { }
-		// }
         if (isInterface) {
-			for (Map.Entry<String, SwiftProperty> entry : properties.entrySet()) {
-
+			// Write setters/getters
+			for (SwiftPropertyDescriptor swiftPropertyDescriptor : swiftPropertyDescriptors) {
+				swiftPropertyDescriptor.generateCode(swiftWriter, javaFullName, simpleTypeName);
 			}
 		}
 
