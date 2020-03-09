@@ -12,29 +12,23 @@ import com.readdle.codegen.anotation.SwiftSetter;
 public interface SampleProtocol {
 	@NonNull
 	@SwiftGetter
-	@SwiftCallbackFunc
 	String getRegularGetter();
 
 	@NonNull
 	@SwiftGetter
-	@SwiftCallbackFunc
 	String getRegularProperty();
 
 	@SwiftSetter
-	@SwiftCallbackFunc("setRegularProperty(_:)")
 	void setRegularProperty(@NonNull String property);
 
 	@Nullable
 	@SwiftGetter
-	@SwiftCallbackFunc
 	String getOptionalGetter();
 
 	@Nullable
 	@SwiftGetter
-	@SwiftCallbackFunc
 	Integer getOptionalProperty();
 
 	@SwiftSetter
-	@SwiftCallbackFunc("setOptionalProperty(_:)")
 	void setOptionalProperty(@Nullable Integer property);
 }

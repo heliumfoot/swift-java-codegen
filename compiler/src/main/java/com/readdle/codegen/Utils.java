@@ -147,4 +147,20 @@ public class Utils {
         }
         return (PackageElement) type;
     }
+
+    public static String getSwiftNameFromJavaPropertyMethod(Element element) {
+    	if (element == null) {
+    		return null;
+		}
+
+		String swiftName = element.getSimpleName().toString();
+		if (swiftName.startsWith("get") || swiftName.startsWith("set")) {
+			swiftName = swiftName.substring(3);
+		}
+
+		char first = Character.toLowerCase(swiftName.charAt(0));
+		swiftName = first + swiftName.substring(1);
+
+		return swiftName;
+	}
 }

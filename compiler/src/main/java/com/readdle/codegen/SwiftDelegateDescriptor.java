@@ -44,33 +44,6 @@ class SwiftDelegateDescriptor {
 
     private boolean isInterface;
 
-    class SwiftProperty {
-    	SwiftGetterDescriptor getterDescriptor;
-    	SwiftSetterDescriptor setterDescriptor;
-    	SwiftCallbackFuncDescriptor getterCallbackFuncDescriptor;
-    	SwiftCallbackFuncDescriptor setterCallbackFuncDescriptor;
-
-    	SwiftProperty(SwiftGetterDescriptor getterDescriptor, SwiftCallbackFuncDescriptor getterCallbackFuncDescriptor) {
-    		this.getterDescriptor = getterDescriptor;
-    		this.getterCallbackFuncDescriptor = getterCallbackFuncDescriptor;
-		}
-
-		SwiftProperty(SwiftSetterDescriptor setterDescriptor, SwiftCallbackFuncDescriptor setterCallbackFuncDescriptor) {
-    		this.setterDescriptor = setterDescriptor;
-    		this.setterCallbackFuncDescriptor = setterCallbackFuncDescriptor;
-		}
-
-		void setSetter(SwiftSetterDescriptor setterDescriptor, SwiftCallbackFuncDescriptor callbackFuncDescriptor) {
-    		this.setterDescriptor = setterDescriptor;
-    		this.setterCallbackFuncDescriptor = callbackFuncDescriptor;
-		}
-
-		void setGetter(SwiftGetterDescriptor getterDescriptor, SwiftCallbackFuncDescriptor callbackFuncDescriptor) {
-			this.getterDescriptor = getterDescriptor;
-			this.getterCallbackFuncDescriptor = callbackFuncDescriptor;
-		}
-	}
-
     SwiftDelegateDescriptor(TypeElement classElement, Filer filer, JavaSwiftProcessor processor) throws IllegalArgumentException {
         this.annotatedClassElement = classElement;
         this.isInterface = classElement.getKind() == ElementKind.INTERFACE;
@@ -168,6 +141,8 @@ class SwiftDelegateDescriptor {
             }
         }
 
+		Map<String, SwiftPropertyDescriptor.Builder> swiftPropertyBuilders = new HashMap<>();
+
         for (Element element : classElement.getEnclosedElements()) {
             if (element.getKind() == ElementKind.METHOD) {
 				ExecutableElement executableElement = (ExecutableElement) element;
@@ -187,43 +162,33 @@ class SwiftDelegateDescriptor {
 
                 callbackFunctions.add(new SwiftCallbackFuncDescriptor(executableElement, processor));
             }
-        }
 
-        Map<String, SwiftProperty> properties = new HashMap<>();
-
-        for (SwiftCallbackFuncDescriptor callbackFuncDescriptor : callbackFunctions) {
-        	ExecutableElement executableElement = callbackFuncDescriptor.getExecutableElement();
-        	SwiftGetter getterAnnotation = executableElement.getAnnotation(SwiftGetter.class);
-			SwiftSetter setterAnnotation = executableElement.getAnnotation(SwiftSetter.class);
-
-        	if (getterAnnotation != null) {
-        		SwiftGetterDescriptor descriptor = new SwiftGetterDescriptor(executableElement, getterAnnotation, processor);
-        		String swiftName = descriptor.getSwiftName();
-
-        		if (properties.containsKey(swiftName)) {
-					SwiftProperty swiftProperty = properties.get(swiftName);
-					swiftProperty.setGetter(descriptor, callbackFuncDescriptor);
-				} else {
-        			SwiftProperty swiftProperty = new SwiftProperty(descriptor, callbackFuncDescriptor);
-        			properties.put(swiftName, swiftProperty);
+			if (element.getKind() == ElementKind.METHOD && (element.getAnnotation(SwiftGetter.class) != null || element.getAnnotation(SwiftSetter.class) != null)) {
+				ExecutableElement executableElement = (ExecutableElement) element;
+				if (executableElement.getModifiers().contains(Modifier.NATIVE)) {
+					String message = String.format("%s is native method. Only java methods can be annotated with @SwiftGetter or @SwiftSetter within the context of @SwiftDelegate.",
+						executableElement.getSimpleName());
+					throw new SwiftMappingException(message, executableElement);
 				}
-			} else if(setterAnnotation != null) {
-				SwiftSetterDescriptor descriptor = new SwiftSetterDescriptor(executableElement, setterAnnotation, processor);
-				String swiftName = descriptor.getSwiftName();
 
-				if (properties.containsKey(swiftName)) {
-					SwiftProperty swiftProperty = properties.get(swiftName);
-					swiftProperty.setSetter(descriptor, callbackFuncDescriptor);
-				} else {
-					SwiftProperty swiftProperty = new SwiftProperty(descriptor, callbackFuncDescriptor);
-					properties.put(swiftName, swiftProperty);
+				String propertyKey = Utils.getSwiftNameFromJavaPropertyMethod(element);
+
+				SwiftPropertyDescriptor.Builder propertyBuilder = swiftPropertyBuilders.getOrDefault(propertyKey, new SwiftPropertyDescriptor.Builder(processor));
+
+				if (element.getAnnotation(SwiftGetter.class) != null) {
+					propertyBuilder.addGetterElement((ExecutableElement) element);
+				} else if (element.getAnnotation(SwiftSetter.class) != null) {
+					propertyBuilder.addSetterElement((ExecutableElement) element);
+				}
+
+				if (!swiftPropertyBuilders.containsKey(propertyKey)) {
+					swiftPropertyBuilders.put(propertyKey, propertyBuilder);
 				}
 			}
-		}
+        }
 
-		for (Map.Entry<String, SwiftProperty> entry : properties.entrySet()) {
-			SwiftPropertyDescriptor propertyDescriptor = new SwiftPropertyDescriptor(entry.getValue(), processor);
-			swiftPropertyDescriptors.add(propertyDescriptor);
+		for (Map.Entry<String, SwiftPropertyDescriptor.Builder> entry : swiftPropertyBuilders.entrySet()) {
+			swiftPropertyDescriptors.add(entry.getValue().build());
 		}
     }
 
@@ -260,14 +225,6 @@ class SwiftDelegateDescriptor {
 
         swiftWriter.emitEmptyLine();
         swiftWriter.emitStatement("let jniObject: jobject");
-
-
-        if (isInterface) {
-			// Write setters/getters
-			for (SwiftPropertyDescriptor swiftPropertyDescriptor : swiftPropertyDescriptors) {
-				swiftPropertyDescriptor.generateCode(swiftWriter, javaFullName, simpleTypeName);
-			}
-		}
 
         swiftWriter.emitEmptyLine();
         swiftWriter.emitStatement("public init(jniObject: jobject) {");
@@ -308,6 +265,12 @@ class SwiftDelegateDescriptor {
         swiftWriter.emitStatement("public func javaObject() throws -> jobject {");
         swiftWriter.emitStatement("return jniObject");
         swiftWriter.emitStatement("}");
+
+        swiftWriter.emitEmptyLine();
+
+		for (SwiftPropertyDescriptor propertyDescriptor : swiftPropertyDescriptors) {
+			propertyDescriptor.generateCode(swiftWriter, javaFullName, simpleTypeName);
+		}
 
         for (SwiftCallbackFuncDescriptor function : callbackFunctions) {
             function.generateCode(swiftWriter, javaFullName, simpleTypeName);

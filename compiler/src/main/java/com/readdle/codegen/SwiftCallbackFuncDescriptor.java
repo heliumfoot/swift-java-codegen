@@ -123,7 +123,7 @@ public class SwiftCallbackFuncDescriptor {
                 isStatic ? "getStaticJavaMethod" : "getJavaMethod"));
 
         swiftWriter.emitEmptyLine();
-        swiftWriter.emit(String.format("public %s func %s(", isStatic ? "static" : "", swiftMethodName));
+        swiftWriter.emit(String.format("public %sfunc %s(", isStatic ? "static " : "", swiftMethodName));
         for (int i = 0; i < params.size(); i++) {
             boolean isFirst = i == 0;
 
