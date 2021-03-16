@@ -99,7 +99,10 @@ class SwiftFuncDescriptor implements JavaSwiftProcessor.WritableElement {
 
         String retType = "";
         if (returnSwiftType != null) {
-            retType = " -> " + returnSwiftType.javaSigType(isReturnTypeOptional) + "?";
+            retType = " -> " + returnSwiftType.javaSigType(isReturnTypeOptional);
+            if (isReturnTypeOptional || !returnSwiftType.isPrimitiveType()) {
+                retType += "?";
+            }
         }
 
         swiftWriter.emit(String.format(")%s {\n", retType));
@@ -113,7 +116,21 @@ class SwiftFuncDescriptor implements JavaSwiftProcessor.WritableElement {
             swiftWriter.emitStatement(String.format("let %s: %s%s", param.name, param.swiftType.swiftType, param.isOptional ? "?" : ""));
         }
 
-        boolean shouldCatchPreamble = params.size() > 0 || !isStatic;
+
+        boolean shouldCatchPreamble = false;
+        if (isStatic) {
+            for (SwiftParamDescriptor param : params) {
+                // primitive types constructors not throw
+                if (param.isOptional || !param.isPrimitive()) {
+                    shouldCatchPreamble = true;
+                    break;
+                }
+            }
+        }
+        else {
+            shouldCatchPreamble = true;
+        }
+
         if (shouldCatchPreamble) {
             swiftWriter.emitStatement("do {");
         }
@@ -143,7 +160,17 @@ class SwiftFuncDescriptor implements JavaSwiftProcessor.WritableElement {
             swiftWriter.emitStatement("}");
             swiftWriter.emitStatement("catch {");
             Utils.handleRuntimeError(swiftWriter);
-            swiftWriter.emitStatement(String.format("return%s", returnSwiftType != null ? " nil" : ""));
+            if (returnSwiftType == null) {
+                swiftWriter.emitStatement("return");
+            }
+            else {
+                if (!isReturnTypeOptional && returnSwiftType.isPrimitiveType()) {
+                    swiftWriter.emitStatement("return " + returnSwiftType.primitiveDefaultValue());
+                }
+                else {
+                    swiftWriter.emitStatement("return nil");
+                }
+            }
             swiftWriter.emitStatement("}");
         }
 
@@ -192,7 +219,12 @@ class SwiftFuncDescriptor implements JavaSwiftProcessor.WritableElement {
             swiftWriter.emitStatement("}");
             swiftWriter.emitStatement("catch {");
             Utils.handleRuntimeError(swiftWriter);
-            swiftWriter.emitStatement("return nil");
+            if (!isReturnTypeOptional && returnSwiftType.isPrimitiveType()) {
+                swiftWriter.emitStatement("return " + returnSwiftType.primitiveDefaultValue());
+            }
+            else {
+                swiftWriter.emitStatement("return nil");
+            }
             swiftWriter.emitStatement("}");
         }
 
@@ -200,7 +232,17 @@ class SwiftFuncDescriptor implements JavaSwiftProcessor.WritableElement {
             swiftWriter.emitStatement("}");
             swiftWriter.emitStatement("catch {");
             Utils.handleError(swiftWriter);
-            swiftWriter.emitStatement(String.format("return%s", returnSwiftType != null ? " nil" : ""));
+            if (returnSwiftType == null) {
+                swiftWriter.emitStatement("return");
+            }
+            else {
+                if (!isReturnTypeOptional && returnSwiftType.isPrimitiveType()) {
+                    swiftWriter.emitStatement("return " + returnSwiftType.primitiveDefaultValue());
+                }
+                else {
+                    swiftWriter.emitStatement("return nil");
+                }
+            }
             swiftWriter.emitStatement("}");
         }
 
