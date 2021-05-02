@@ -7,4 +7,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.5'
 }
 
-apply from: rootProject.file('bintray-publish.gradle')
+apply from: rootProject.file('functions.gradle')
+def publishing_designator = ext.getFromEnvironment("publishing_designator") ?: "bintray"
+apply from: rootProject.file("${publishing_designator}-publish.gradle")
+

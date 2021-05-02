@@ -1,0 +1,51 @@
+apply plugin: "maven-publish"
+
+apply from: rootProject.file('functions.gradle')
+
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+/**
+ *
+ * @param propertyName
+ * @return returns the value as passed in from the command line as a -P, read from local.properties or System.getenv in that order
+ */
+
+def githubUserName = ext.getFromEnvironment('gpr.user')
+def githubUserKey = ext.getFromEnvironment('gpr.key')
+def githubOrganization = ext.getFromEnvironment('github.organization') ?: "heliumfoot"
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/${githubOrganization}/swift-java-codegen")
+            credentials {
+                username = githubUserName
+                password = githubUserKey
+            }
+        }
+    }
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId archivesBaseName
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+        }
+    }
+}
+

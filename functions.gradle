@@ -1,0 +1,22 @@
+/**
+ *
+ * @param propertyName
+ * @return returns the value as passed in from the command line as a -P, read from local.properties or System.getenv in that order
+ */
+String getFromEnvironment(String propertyName) {
+    def properties = new Properties()
+    try {
+        properties.load(new FileInputStream(rootProject.file("local.properties")))
+    } catch (Throwable e) {
+        println "Cannot read local.properties"
+    }
+    def value = properties[propertyName] ?: System.getenv(propertyName)
+    if (project.hasProperty(propertyName)) {
+        value = project.getProperty(propertyName)
+    }
+    return value
+}
+
+ext {
+    getFromEnvironment = this.&getFromEnvironment
+}

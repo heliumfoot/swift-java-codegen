@@ -2,4 +2,6 @@ apply plugin: 'java'
 
 archivesBaseName = "annotations"
 
-apply from: rootProject.file('bintray-publish.gradle')
+apply from: rootProject.file('functions.gradle')
+def publishing_designator = ext.getFromEnvironment("publishing_designator") ?: "bintray"
+apply from: rootProject.file("${publishing_designator}-publish.gradle")
