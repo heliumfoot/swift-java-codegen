@@ -385,7 +385,7 @@ public class JavaSwiftProcessor extends AbstractProcessor {
         if (moduleDescriptor.customTypeMappings != null && moduleDescriptor.customTypeMappings.containsKey(javaType)) {
             return new SwiftEnvironment.Type(moduleDescriptor.customTypeMappings.get(javaType), javaType);
         }
-        switch (javaType) {
+        switch (javaType.trim()) {
             case "void":
                 return null;
             case "byte":

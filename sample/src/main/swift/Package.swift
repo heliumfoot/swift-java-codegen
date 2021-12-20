@@ -1,4 +1,4 @@
-// swift-tools-version:5.0
+// swift-tools-version:5.3
 import Foundation
 import PackageDescription
 
@@ -53,10 +53,10 @@ let package = Package(
     products: addGenerated([
     ]),
     dependencies: [
-        .package(url: "https://github.com/readdle/java_swift.git", .upToNextMinor(from: "2.1.8")),
-        .package(url: "https://github.com/readdle/swift-java.git", .upToNextMinor(from: "0.2.2")),
-        .package(url: "https://github.com/readdle/swift-java-coder.git", .branch("dev/kotlin-support")),
-        .package(url: "https://github.com/readdle/swift-anycodable.git", .upToNextMinor(from: "1.0.3")),
+        .package(name: "java_swift", url: "https://github.com/readdle/java_swift.git", .upToNextMinor(from: "2.1.8")),
+        .package(name: "Java", url: "https://github.com/readdle/swift-java.git", .upToNextMinor(from: "0.2.2")),
+        .package(name: "JavaCoder", url: "https://github.com/readdle/swift-java-coder.git", .branch("dev/kotlin-support")),
+        .package(name: "AnyCodable", url: "https://github.com/readdle/swift-anycodable.git", .upToNextMinor(from: "1.0.3")),
     ],
     targets: addGenerated([
         .target(name: packageName, dependencies: ["AnyCodable", "java_swift", "JavaCoder"])
