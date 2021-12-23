@@ -1,0 +1,58 @@
+apply plugin: 'maven-publish'
+
+group = PUBLISH_GROUP_ID
+version = PUBLISH_VERSION
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = "sources"
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.java
+
+                // The coordinates of the library, being set from variables that
+                // we'll set up later
+                groupId PUBLISH_GROUP_ID
+                artifactId PUBLISH_ARTIFACT_ID
+                version PUBLISH_VERSION
+
+                // Three artifacts: jar, sources and javadoc
+                artifact jar
+                artifact sourcesJar
+                artifact javadocJar
+
+                // Mostly self-explanatory metadata
+                pom {
+                    name = PUBLISH_ARTIFACT_ID
+                    description = 'Swift Android Codegen'
+                    url = 'https://github.com/heliumfoot/swift-java-codegen'
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                            url = 'https://github.com/heliumfoot/swift-java-codegen/blob/master/LICENSE'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = 'heliumfoot'
+                            name = 'Helium Foot Software'
+                            email = 'developers@heliumfoot.com'
+                        }
+                    }
+
+                    // Version control info - if you're using GitHub, follow the
+                    // format as seen here
+                    scm {
+                        connection = 'scm:git:github.com/heliumfoot/swift-java-codegen.git'
+                        developerConnection = 'scm:git:ssh://github.com/heliumfoot/swift-java-codegen.git'
+                        url = 'https://github.com/heliumfoot/swift-java-codegen'
+                    }
+                }
+            }
+        }
+    }
+}
