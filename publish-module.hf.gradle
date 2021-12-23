@@ -10,6 +10,18 @@ task sourceJar(type: Jar) {
 
 afterEvaluate {
     publishing {
+
+        repositories {
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/${githubOrganization}/swift-java-codegen")
+                credentials {
+                    username = githubUserName
+                    password = githubUserKey
+                }
+            }
+        }
+
         publications {
             release(MavenPublication) {
                 from components.java
@@ -19,11 +31,6 @@ afterEvaluate {
                 groupId PUBLISH_GROUP_ID
                 artifactId PUBLISH_ARTIFACT_ID
                 version PUBLISH_VERSION
-
-                // Three artifacts: jar, sources and javadoc
-                artifact jar
-                artifact sourcesJar
-                artifact javadocJar
 
                 // Mostly self-explanatory metadata
                 pom {
@@ -55,4 +62,21 @@ afterEvaluate {
             }
         }
     }
+
+    project.publishing.publications.each{publication->
+
+        if(publication instanceof MavenPublication){
+            println(">> ${publication.groupId}:${publication.artifactId}:${publication.version}")
+            println "Artifacts"
+            publication.artifacts.each{artifact->
+                println("\t${artifact.classifier}:${artifact.extension}")
+            }
+        }
+    }
+
+    project.publishing.repositories.each {repo ->
+        println "Repo: ${repo.name}:${repo.url}"
+    }
 }
+
+

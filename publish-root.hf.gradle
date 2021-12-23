@@ -17,16 +17,3 @@ if (secretPropsFile.exists()) {
     ext["githubUserKey"] = System.getenv('GITHUB_PASSWORD')
     ext["githubOrganization"] = System.getenv('GITHUB_ORGANIZATION') ?: 'heliumfoot'
 }
-
-publishing {
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/${githubOrganization}/swift-java-codegen")
-            credentials {
-                username = githubUserName
-                password = githubUserKey
-            }
-        }
-    }
-}
