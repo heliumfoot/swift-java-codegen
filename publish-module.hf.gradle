@@ -1,0 +1,82 @@
+apply plugin: 'maven-publish'
+
+group = PUBLISH_GROUP_ID
+version = PUBLISH_VERSION
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = "sources"
+}
+
+afterEvaluate {
+    publishing {
+
+        repositories {
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/${githubOrganization}/swift-java-codegen")
+                credentials {
+                    username = githubUserName
+                    password = githubUserKey
+                }
+            }
+        }
+
+        publications {
+            release(MavenPublication) {
+                from components.java
+
+                // The coordinates of the library, being set from variables that
+                // we'll set up later
+                groupId PUBLISH_GROUP_ID
+                artifactId PUBLISH_ARTIFACT_ID
+                version PUBLISH_VERSION
+
+                // Mostly self-explanatory metadata
+                pom {
+                    name = PUBLISH_ARTIFACT_ID
+                    description = 'Swift Android Codegen'
+                    url = 'https://github.com/heliumfoot/swift-java-codegen'
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                            url = 'https://github.com/heliumfoot/swift-java-codegen/blob/master/LICENSE'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = 'heliumfoot'
+                            name = 'Helium Foot Software'
+                            email = 'developers@heliumfoot.com'
+                        }
+                    }
+
+                    // Version control info - if you're using GitHub, follow the
+                    // format as seen here
+                    scm {
+                        connection = 'scm:git:github.com/heliumfoot/swift-java-codegen.git'
+                        developerConnection = 'scm:git:ssh://github.com/heliumfoot/swift-java-codegen.git'
+                        url = 'https://github.com/heliumfoot/swift-java-codegen'
+                    }
+                }
+            }
+        }
+    }
+
+    project.publishing.publications.each{publication->
+
+        if(publication instanceof MavenPublication){
+            println(">> ${publication.groupId}:${publication.artifactId}:${publication.version}")
+            println "Artifacts"
+            publication.artifacts.each{artifact->
+                println("\t${artifact.classifier}:${artifact.extension}")
+            }
+        }
+    }
+
+    project.publishing.repositories.each {repo ->
+        println "Repo: ${repo.name}:${repo.url}"
+    }
+}
+
+
