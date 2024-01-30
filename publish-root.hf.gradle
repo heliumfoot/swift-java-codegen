@@ -1,0 +1,19 @@
+apply plugin: 'maven-publish'
+
+// Create variables with empty default values
+ext["githubUserName"] = ''
+ext["githubUserKey"] = ''
+ext["githubOrganization"] = 'heliumfoot'
+
+File secretPropsFile = project.rootProject.file('local.properties')
+if (secretPropsFile.exists()) {
+    // Read local.properties file first if it exists
+    Properties p = new Properties()
+    new FileInputStream(secretPropsFile).withCloseable { is -> p.load(is) }
+    p.each { name, value -> ext[name] = value }
+} else {
+    // Use system environment variables
+    ext["githubUserName"] = System.getenv('GITHUB_USERNAME')
+    ext["githubUserKey"] = System.getenv('GITHUB_PASSWORD')
+    ext["githubOrganization"] = System.getenv('GITHUB_ORGANIZATION') ?: 'heliumfoot'
+}
