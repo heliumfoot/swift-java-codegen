@@ -30,8 +30,9 @@ task clean(type: Delete) {
 }
 
 apply from: "${rootDir}/publish-root.hf.gradle"
+apply plugin: 'io.github.gradle-nexus.publish-plugin'
 
 ext {
     PUBLISH_GROUP_ID = 'com.heliumfoot.swift.java.codegen'
-    PUBLISH_VERSION = "0.9.6"
+    PUBLISH_VERSION = "0.9.7"
 }

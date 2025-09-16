@@ -18,7 +18,7 @@ android {
     compileSdkVersion 34
     defaultConfig {
         applicationId "com.readdle.swiftjava.sample"
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdkVersion 34
         versionCode 1
         versionName "1.0"
@@ -60,6 +60,16 @@ android {
             minifyEnabled false
             shrinkResources false
         }
+    }
+}
+
+
+tasks.withType(Exec).configureEach { t ->
+    if (t.name.startsWith("swiftBuild")) {
+        environment "ANDROID_NDK_HOME", System.getenv("ANDROID_NDK_HOME")
+        environment "ANDROID_NDK", System.getenv("ANDROID_NDK")
+        // Optionally force destination file
+        args "--destination", "${System.getenv("HOME")}/.android-swift/swift-android/build-tools/src/bash/aarch64-unknown-linux-android29.json"
     }
 }
 
