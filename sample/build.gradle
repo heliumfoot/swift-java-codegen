@@ -8,7 +8,7 @@ swift {
     useKapt true
     cleanEnabled true
     debug {
-        extraBuildFlags("-Xswiftc", "-DDEBUG")
+        extraBuildFlags( "-Xswiftc", "-DDEBUG")// add, "-v" if need more information on build process
     }
 }
 
@@ -64,14 +64,6 @@ android {
 }
 
 
-tasks.withType(Exec).configureEach { t ->
-    if (t.name.startsWith("swiftBuild")) {
-        environment "ANDROID_NDK_HOME", System.getenv("ANDROID_NDK_HOME")
-        environment "ANDROID_NDK", System.getenv("ANDROID_NDK")
-        // Optionally force destination file
-        args "--destination", "${System.getenv("HOME")}/.android-swift/swift-android/build-tools/src/bash/aarch64-unknown-linux-android29.json"
-    }
-}
 
 dependencies {
     kapt project(':compiler')
