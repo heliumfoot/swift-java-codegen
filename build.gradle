@@ -47,6 +47,6 @@ apply plugin: 'io.github.gradle-nexus.publish-plugin'
 
 ext {
     PUBLISH_GROUP_ID = 'com.heliumfoot.swift.java.codegen'
-    PUBLISH_VERSION = "0.9.6-hfdev1"
+    PUBLISH_VERSION = "0.9.6-hf0"
 }
 
