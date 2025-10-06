@@ -13,9 +13,9 @@ swift {
 }
 
 android {
-    compileSdkVersion 34
+    compileSdkVersion 36
     namespace = "com.readdle.swiftjava.sample"
-    compileSdkVersion 34
+    compileSdkVersion 36
     defaultConfig {
         applicationId "com.readdle.swiftjava.sample"
         minSdkVersion 24

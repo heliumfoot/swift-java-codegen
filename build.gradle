@@ -5,13 +5,26 @@ buildscript {
         google()
         mavenCentral()
         maven {
+            url = uri("https://maven.pkg.github.com/heliumfoot/swift-java-gradle")
+            credentials {
+                def props = new Properties()
+                def file = rootProject.file("local.properties")
+                if (file.exists()) {
+                    props.load(file.newDataInputStream())
+                }
+                username = props.getProperty("githubUserName") ?: ""
+                password = props.getProperty("githubUserKey") ?: ""
+            }
+        }
+
+        maven {
             url "https://plugins.gradle.org/m2/"
         }
     }
 
     dependencies {
         classpath 'com.android.tools.build:gradle:8.3.2'
-        classpath "com.readdle.android.swift:gradle:6.0.3"
+        classpath 'com.heliumfoot.android.swift:gradle:6.0.3-hf0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
         classpath 'io.github.gradle-nexus:publish-plugin:1.1.0'
@@ -34,5 +47,6 @@ apply plugin: 'io.github.gradle-nexus.publish-plugin'
 
 ext {
     PUBLISH_GROUP_ID = 'com.heliumfoot.swift.java.codegen'
-    PUBLISH_VERSION = "0.9.7"
+    PUBLISH_VERSION = "0.9.6-hfdev1"
 }
+
