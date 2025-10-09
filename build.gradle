@@ -24,7 +24,7 @@ buildscript {
 
     dependencies {
         classpath 'com.android.tools.build:gradle:8.3.2'
-        classpath 'com.heliumfoot.android.swift:gradle:6.0.3-hf0'
+        classpath 'com.heliumfoot.android.swift:gradle:6.1.1-hf0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
         classpath 'io.github.gradle-nexus:publish-plugin:1.1.0'
@@ -47,6 +47,6 @@ apply plugin: 'io.github.gradle-nexus.publish-plugin'
 
 ext {
     PUBLISH_GROUP_ID = 'com.heliumfoot.swift.java.codegen'
-    PUBLISH_VERSION = "0.9.6-hf0"
+    PUBLISH_VERSION = "0.9.6-hf2"
 }
 
